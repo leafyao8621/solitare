@@ -4,7 +4,13 @@
 
 #include "../core/core.h"
 
-struct Game game;
+#define GROUP_STOCK 0
+#define GROUP_TALON 1
+#define GROUP_FOUNDATION 2
+#define GROUP_TABLEAU 3
+
+static struct Game game;
+static char group, position;
 
 static void render_talon(void) {
     if (game.talon_ptr != game.talon) {
@@ -47,6 +53,8 @@ void controller_initialize(void) {
     render_talon();
     render_tableau();
     move(1, 0);
+    group = GROUP_STOCK;
+    position = 0;
 }
 
 char controller_handle(void) {
