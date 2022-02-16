@@ -41,7 +41,7 @@ int core_initialize(struct Game *game, unsigned seed) {
         return 1;
     }
     mt19937_initialize(&game->gen, seed);
-    static char cards[53];
+    static char cards[52];
     for (char i = 0, *ii = cards; i < 4; ++i) {
         for (char j = 0; j < 13; ++j, ++ii) {
             *ii = (i << 4) | j;
@@ -54,6 +54,7 @@ int core_initialize(struct Game *game, unsigned seed) {
     game->stock_ptr = game->stock;
     memset(game->talon, -1, 24);
     game->talon_ptr = game->talon;
+    memset(game->foundations, -1, 4);
     for (char i = 0, *ii = cards + 24; i < 7; ++i) {
         for (char j = 0, *jj = game->tableau[(unsigned long)i];
              j < 13;
@@ -81,9 +82,14 @@ int core_draw(struct Game *game) {
         *game->stock_ptr == -1) {
         return 2;
     }
-    if (*game->stock_ptr != -1) {
+    if (game->stock_ptr - game->stock < 24 && *game->stock_ptr != -1) {
         *(game->talon_ptr++) = *game->stock_ptr;
         *(game->stock_ptr++) = -1;
+    } else {
+        memcpy(game->stock, game->talon, 24);
+        memset(game->talon, -1, 24);
+        game->stock_ptr = game->stock;
+        game->talon_ptr = game->talon;
     }
     return 0;
 }
