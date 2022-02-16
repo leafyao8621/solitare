@@ -10,10 +10,10 @@ extern const char *rank_lookup[13];
 
 struct Game {
     struct MT19937 gen;
-    char stock[24], *stock_ptr,
-         talon[24], *talon_ptr,
-         foundations[4],
-         tableau[7][13];
+    unsigned char stock[24], *stock_ptr,
+                  talon[24], *talon_ptr,
+                  foundations[4],
+                  tableau[7][13];
 };
 
 int core_initialize(struct Game *game, unsigned seed);

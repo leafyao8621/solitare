@@ -10,7 +10,7 @@
 #define GROUP_TABLEAU 3
 
 static struct Game game;
-static char group, position;
+static unsigned char group, position;
 
 static void render_talon(void) {
     if (game.talon_ptr != game.talon) {
@@ -23,8 +23,8 @@ static void render_talon(void) {
 }
 
 static void render_foundation(void) {
-    for (char i = 0, *ii = game.foundations; i < 4; ++i, ++ii) {
-        if (*ii != -1) {
+    for (unsigned char i = 0, *ii = game.foundations; i < 4; ++i, ++ii) {
+        if (*ii != 0xff) {
             mvprintw(1, 12 + (i << 2), "%c%2s",
                      suite_lookup[(unsigned long)(*ii >> 4)],
                      rank_lookup[(unsigned long)(*ii & 0xf)]);
@@ -35,11 +35,11 @@ static void render_foundation(void) {
 }
 
 static void render_tableau(void) {
-    for (char i = 0; i < 7; ++i) {
-        for (char j = 0, *jj = game.tableau[(unsigned long)i];
+    for (unsigned char i = 0; i < 7; ++i) {
+        for (unsigned char j = 0, *jj = game.tableau[(unsigned long)i];
              j < 13;
              ++j, ++jj) {
-            if (*jj != -1) {
+            if (*jj != 0xff) {
                 if (*jj & 0x80) {
                     mvaddstr(2 + j, i << 2, "---");
                 } else {
@@ -163,7 +163,7 @@ char controller_handle(void) {
                 position += 0x10;
                 for (; (position & 0xf) &&
                        game.tableau[(unsigned long)(position >> 4)]
-                                   [(unsigned long)(position & 0xf)] == -1;
+                                   [(unsigned long)(position & 0xf)] == 0xff;
                      --position);
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
@@ -173,15 +173,15 @@ char controller_handle(void) {
                 position -= 0x10;
                 for (; (position & 0xf) &&
                        game.tableau[(unsigned long)(position >> 4)]
-                                   [(unsigned long)(position & 0xf)] == -1;
+                                   [(unsigned long)(position & 0xf)] == 0xff;
                      --position);
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
             break;
         case KEY_DOWN:
-            if (position < 12 &&
+            if ((position & 0xf) < 12 &&
                 game.tableau[(unsigned long)((position + 1) >> 4)]
-                            [(unsigned long)((position + 1) & 0xf)] != -1) {
+                            [(unsigned long)((position + 1) & 0xf)] != 0xff) {
                 ++position;
                 move(2 + (position & 0xf), position >> 4 << 2);
             }

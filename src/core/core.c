@@ -30,8 +30,8 @@ const char *rank_lookup[13] = {
     "K"
 };
 
-static void swap(char *a, char *b) {
-    char c = *a;
+static void swap(unsigned char *a, unsigned char *b) {
+    unsigned char c = *a;
     *a = *b;
     *b = c;
 }
@@ -41,13 +41,13 @@ int core_initialize(struct Game *game, unsigned seed) {
         return 1;
     }
     mt19937_initialize(&game->gen, seed);
-    static char cards[52];
-    for (char i = 0, *ii = cards; i < 4; ++i) {
-        for (char j = 0; j < 13; ++j, ++ii) {
+    static unsigned char cards[52];
+    for (unsigned char i = 0, *ii = cards; i < 4; ++i) {
+        for (unsigned char j = 0; j < 13; ++j, ++ii) {
             *ii = (i << 4) | j;
         }
     }
-    for (char i = 0, *ii = cards; i < 52; ++i, ++ii) {
+    for (unsigned char i = 0, *ii = cards; i < 52; ++i, ++ii) {
         swap(ii, cards + mt19937_gen(&game->gen) % 52);
     }
     memcpy(game->stock, cards, 24);
@@ -55,8 +55,8 @@ int core_initialize(struct Game *game, unsigned seed) {
     memset(game->talon, -1, 24);
     game->talon_ptr = game->talon;
     memset(game->foundations, -1, 4);
-    for (char i = 0, *ii = cards + 24; i < 7; ++i) {
-        for (char j = 0, *jj = game->tableau[(unsigned long)i];
+    for (unsigned char i = 0, *ii = cards + 24; i < 7; ++i) {
+        for (unsigned char j = 0, *jj = game->tableau[(unsigned long)i];
              j < 13;
              ++j, ++jj) {
             if (j < i) {
@@ -66,7 +66,7 @@ int core_initialize(struct Game *game, unsigned seed) {
                 *jj = *ii;
                 ++ii;
             } else {
-                *jj = -1;
+                *jj = 0xff;
             }
 
         }
@@ -79,12 +79,12 @@ int core_draw(struct Game *game) {
         return 1;
     }
     if (game->stock == game->stock_ptr &&
-        *game->stock_ptr == -1) {
+        *game->stock_ptr == 0xff) {
         return 2;
     }
-    if (game->stock_ptr - game->stock < 24 && *game->stock_ptr != -1) {
+    if (game->stock_ptr - game->stock < 24 && *game->stock_ptr != 0xff) {
         *(game->talon_ptr++) = *game->stock_ptr;
-        *(game->stock_ptr++) = -1;
+        *(game->stock_ptr++) = 0xff;
     } else {
         memcpy(game->stock, game->talon, 24);
         memset(game->talon, -1, 24);
@@ -99,8 +99,8 @@ int core_log(struct Game *game, FILE *fout) {
         return 1;
     }
     puts("Stock:");
-    for (char i = 0, *ii = game->stock; i < 24; ++i, ++ii) {
-        if (*ii != -1) {
+    for (unsigned char i = 0, *ii = game->stock; i < 24; ++i, ++ii) {
+        if (*ii != 0xff) {
             printf("%c%2s\n",
                    suite_lookup[(unsigned long)(*ii >> 4)],
                    rank_lookup[(unsigned long)(*ii & 0xf)]);
@@ -109,8 +109,8 @@ int core_log(struct Game *game, FILE *fout) {
         }
     }
     puts("Talon:");
-    for (char i = 0, *ii = game->talon; i < 24; ++i, ++ii) {
-        if (*ii != -1) {
+    for (unsigned char i = 0, *ii = game->talon; i < 24; ++i, ++ii) {
+        if (*ii != 0xff) {
             printf("%c%2s\n",
                    suite_lookup[(unsigned long)(*ii >> 4)],
                    rank_lookup[(unsigned long)(*ii & 0xf)]);
@@ -119,12 +119,12 @@ int core_log(struct Game *game, FILE *fout) {
         }
     }
     puts("Tableau:");
-    for (char i = 0; i < 7; ++i) {
+    for (unsigned char i = 0; i < 7; ++i) {
         printf("%hhd:\n", i);
-        for (char j = 0, *jj = game->tableau[(unsigned long)i];
+        for (unsigned char j = 0, *jj = game->tableau[(unsigned long)i];
              j < 13;
              ++j, ++jj) {
-            if (*jj != -1) {
+            if (*jj != 0xff) {
                 printf("%c%2s",
                        suite_lookup[(unsigned long)((*jj & 0x7f) >> 4)],
                        rank_lookup[(unsigned long)((*jj & 0x7f) & 0xf)]);
