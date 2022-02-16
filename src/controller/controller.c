@@ -39,7 +39,7 @@ static void render_tableau(void) {
         for (char j = 0, *jj = game.tableau[(unsigned long)i];
              j < 13;
              ++j, ++jj) {
-            if (*jj != 0xff) {
+            if (*jj != -1) {
                 if (*jj & 0x80) {
                     mvaddstr(2 + j, i << 2, "---");
                 } else {
@@ -163,7 +163,7 @@ char controller_handle(void) {
                 position += 0x10;
                 for (; (position & 0xf) &&
                        game.tableau[(unsigned long)(position >> 4)]
-                                   [(unsigned long)(position & 0xf)] == 0xff;
+                                   [(unsigned long)(position & 0xf)] == -1;
                      --position);
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
@@ -173,7 +173,7 @@ char controller_handle(void) {
                 position -= 0x10;
                 for (; (position & 0xf) &&
                        game.tableau[(unsigned long)(position >> 4)]
-                                   [(unsigned long)(position & 0xf)] == 0xff;
+                                   [(unsigned long)(position & 0xf)] == -1;
                      --position);
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
@@ -181,7 +181,7 @@ char controller_handle(void) {
         case KEY_DOWN:
             if (position < 12 &&
                 game.tableau[(unsigned long)((position + 1) >> 4)]
-                            [(unsigned long)((position + 1) & 0xf)] != 0xff) {
+                            [(unsigned long)((position + 1) & 0xf)] != -1) {
                 ++position;
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
