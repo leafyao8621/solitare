@@ -39,7 +39,7 @@ static void render_tableau(void) {
         for (char j = 0, *jj = game.tableau[(unsigned long)i];
              j < 13;
              ++j, ++jj) {
-            if (*jj != -1) {
+            if (*jj != 0xff) {
                 if (*jj & 0x80) {
                     mvaddstr(2 + j, i << 2, "---");
                 } else {
