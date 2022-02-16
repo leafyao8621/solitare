@@ -93,6 +93,7 @@ int core_draw(struct Game *game) {
     }
     return 0;
 }
+
 int core_log(struct Game *game, FILE *fout) {
     if (!fout) {
         return 1;
