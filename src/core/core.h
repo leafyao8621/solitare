@@ -18,6 +18,10 @@ struct Game {
 
 int core_initialize(struct Game *game, unsigned seed);
 int core_draw(struct Game *game);
+int core_tableau_to_foundation(struct Game *game,
+                               unsigned char oidx1,
+                               unsigned char oidx2,
+                               unsigned char didx);
 int core_log(struct Game *game, FILE *fout);
 
 #endif

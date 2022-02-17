@@ -56,7 +56,7 @@ int core_initialize(struct Game *game, unsigned seed) {
     game->talon_ptr = game->talon;
     memset(game->foundations, -1, 4);
     for (unsigned char i = 0, *ii = cards + 24; i < 7; ++i) {
-        for (unsigned char j = 0, *jj = game->tableau[(unsigned long)i];
+        for (unsigned char j = 0, *jj = game->tableau[i];
              j < 13;
              ++j, ++jj) {
             if (j < i) {
@@ -90,6 +90,41 @@ int core_draw(struct Game *game) {
         memset(game->talon, -1, 24);
         game->stock_ptr = game->stock;
         game->talon_ptr = game->talon;
+    }
+    return 0;
+}
+
+int core_tableau_to_foundation(struct Game *game,
+                               unsigned char oidx1,
+                               unsigned char oidx2,
+                               unsigned char didx) {
+    if (!game) {
+        return 1;
+    }
+    if (oidx1 > 6 ||
+        oidx2 > 13 ||
+        game->tableau[oidx1][oidx2] & 0x80 ||
+        didx > 3) {
+        return 2;
+    }
+    if (game->foundations[didx] != 0xff) {
+        if (game->tableau[oidx1][oidx2] !=
+            game->foundations[didx] + 1) {
+            return 2;
+        }
+    } else {
+        if ((game->tableau[oidx1][oidx2] >> 4) !=
+            didx ||
+            game->tableau[oidx1][oidx2] & 0xf) {
+            return 2;
+        }
+    }
+    game->foundations[didx] = game->tableau[oidx1][oidx2];
+    game->tableau[oidx1][oidx2] = 0xff;
+    if (oidx2) {
+        if (game->tableau[oidx1][oidx2 - 1] & 0x80) {
+            game->tableau[oidx1][oidx2 - 1] &= 0x7f;
+        }
     }
     return 0;
 }

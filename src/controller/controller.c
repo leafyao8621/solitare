@@ -11,12 +11,13 @@
 
 static struct Game game;
 static unsigned char group, position;
+static unsigned short selection;
 
 static void render_talon(void) {
     if (game.talon_ptr != game.talon) {
         mvprintw(1, 8, "%c%2s",
-                 suite_lookup[(unsigned long)(game.talon_ptr[-1] >> 4)],
-                 rank_lookup[(unsigned long)(game.talon_ptr[-1] & 0xf)]);
+                 suite_lookup[(game.talon_ptr[-1] >> 4)],
+                 rank_lookup[(game.talon_ptr[-1] & 0xf)]);
     } else {
         mvaddstr(1, 8, "---");
     }
@@ -26,8 +27,8 @@ static void render_foundation(void) {
     for (unsigned char i = 0, *ii = game.foundations; i < 4; ++i, ++ii) {
         if (*ii != 0xff) {
             mvprintw(1, 12 + (i << 2), "%c%2s",
-                     suite_lookup[(unsigned long)(*ii >> 4)],
-                     rank_lookup[(unsigned long)(*ii & 0xf)]);
+                     suite_lookup[(*ii >> 4)],
+                     rank_lookup[(*ii & 0xf)]);
         } else {
             mvaddstr(1, 12 + (i << 2), "---");
         }
@@ -36,7 +37,7 @@ static void render_foundation(void) {
 
 static void render_tableau(void) {
     for (unsigned char i = 0; i < 7; ++i) {
-        for (unsigned char j = 0, *jj = game.tableau[(unsigned long)i];
+        for (unsigned char j = 0, *jj = game.tableau[i];
              j < 13;
              ++j, ++jj) {
             if (*jj != 0xff) {
@@ -44,8 +45,8 @@ static void render_tableau(void) {
                     mvaddstr(2 + j, i << 2, "---");
                 } else {
                     mvprintw(2 + j, i << 2, "%c%2s",
-                             suite_lookup[(unsigned long)((*jj & 0x7f) >> 4)],
-                             rank_lookup[(unsigned long)((*jj & 0x7f) & 0xf)]);
+                             suite_lookup[((*jj & 0x7f) >> 4)],
+                             rank_lookup[((*jj & 0x7f) & 0xf)]);
                 }
             }
         }
@@ -65,6 +66,7 @@ void controller_initialize(void) {
     move(1, 0);
     group = GROUP_STOCK;
     position = 0;
+    selection = 0xffff;
 }
 
 char controller_handle(void) {
@@ -90,7 +92,15 @@ char controller_handle(void) {
         case KEY_DOWN:
             group = GROUP_TABLEAU;
             position = 0;
-            move(2, 0);
+            for (; (position & 0xf) &&
+                   game.tableau[(position >> 4)]
+                                [(position & 0xf)] == 0xff;
+                    --position);
+            for (; (position & 0xf) < 13 &&
+                   game.tableau[(position >> 4)]
+                                [(position & 0xf)] & 0x80;
+                    ++position);
+            move(2 + (position & 0xf), position >> 4 << 2);
             break;
         }
         break;
@@ -108,7 +118,15 @@ char controller_handle(void) {
         case KEY_DOWN:
             group = GROUP_TABLEAU;
             position = 0x20;
-            move(2, 8);
+            for (; (position & 0xf) &&
+                   game.tableau[(position >> 4)]
+                                [(position & 0xf)] == 0xff;
+                    --position);
+            for (; (position & 0xf) < 13 &&
+                   game.tableau[(position >> 4)]
+                                [(position & 0xf)] & 0x80;
+                    ++position);
+            move(2 + (position & 0xf), position >> 4 << 2);
             break;
         }
         break;
@@ -133,14 +151,51 @@ char controller_handle(void) {
             group = GROUP_TABLEAU;
             position += 3;
             position <<= 4;
-            move(2, (position >> 4) << 2);
+            for (; (position & 0xf) &&
+                   game.tableau[(position >> 4)]
+                                [(position & 0xf)] == 0xff;
+                    --position);
+            for (; (position & 0xf) < 13 &&
+                   game.tableau[(position >> 4)]
+                                [(position & 0xf)] & 0x80;
+                    ++position);
+            move(2 + (position & 0xf), position >> 4 << 2);
             break;
         }
         break;
     case GROUP_TABLEAU:
         switch (in) {
+        case 'Z':
+        case 'z':
+            if (selection == 0xffff) {
+                if (!(game.tableau[(position >> 4)]
+                                  [(position & 0xf)] & 0x80)) {
+                    selection = (((unsigned short)group) << 8) | position;
+                    mvaddch(2 + (position & 0xf),
+                            (position >> 4 << 2) + 3,
+                            '*');
+                    move(2 + (position & 0xf), position >> 4 << 2);
+                }
+            }
+            break;
+        case 'X':
+        case 'x':
+            if (selection != 0xffff) {
+                switch (selection >> 8) {
+                case GROUP_TABLEAU:
+                    mvaddch(2 + ((selection & 0xff) & 0xf),
+                            ((selection & 0xff) >> 4 << 2) + 3,
+                            ' ');
+                    break;
+                }
+                selection = 0xffff;
+                move(2 + (position & 0xf), position >> 4 << 2);
+            }
+            break;
         case KEY_UP:
-            if (position & 0xf) {
+            if ((position & 0xf) &&
+                !(game.tableau[((position - 1) >> 4)]
+                              [((position - 1) & 0xf)] & 0x80)) {
                 --position;
                 move(2 + (position & 0xf), position >> 4 << 2);
             } else {
@@ -162,9 +217,13 @@ char controller_handle(void) {
             if ((position >> 4) < 6) {
                 position += 0x10;
                 for (; (position & 0xf) &&
-                       game.tableau[(unsigned long)(position >> 4)]
-                                   [(unsigned long)(position & 0xf)] == 0xff;
+                       game.tableau[(position >> 4)]
+                                   [(position & 0xf)] == 0xff;
                      --position);
+                for (; (position & 0xf) < 13 &&
+                       game.tableau[(position >> 4)]
+                                   [(position & 0xf)] & 0x80;
+                     ++position);
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
             break;
@@ -172,16 +231,20 @@ char controller_handle(void) {
             if (position >> 4) {
                 position -= 0x10;
                 for (; (position & 0xf) &&
-                       game.tableau[(unsigned long)(position >> 4)]
-                                   [(unsigned long)(position & 0xf)] == 0xff;
+                       game.tableau[(position >> 4)]
+                                   [(position & 0xf)] == 0xff;
                      --position);
+                for (; (position & 0xf) < 13 &&
+                       game.tableau[(position >> 4)]
+                                   [(position & 0xf)] & 0x80;
+                     ++position);
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
             break;
         case KEY_DOWN:
             if ((position & 0xf) < 12 &&
-                game.tableau[(unsigned long)((position + 1) >> 4)]
-                            [(unsigned long)((position + 1) & 0xf)] != 0xff) {
+                game.tableau[((position + 1) >> 4)]
+                            [((position + 1) & 0xf)] != 0xff) {
                 ++position;
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
