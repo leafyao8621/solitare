@@ -42,12 +42,14 @@ static void render_tableau(void) {
              ++j, ++jj) {
             if (*jj != 0xff) {
                 if (*jj & 0x80) {
-                    mvaddstr(2 + j, i << 2, "---");
+                    mvaddstr(2 + j, i << 2, "--- ");
                 } else {
-                    mvprintw(2 + j, i << 2, "%c%2s",
+                    mvprintw(2 + j, i << 2, "%c%2s ",
                              suite_lookup[((*jj & 0x7f) >> 4)],
                              rank_lookup[((*jj & 0x7f) & 0xf)]);
                 }
+            } else {
+                mvaddstr(2 + j, i << 2, "    ");
             }
         }
     }
@@ -132,6 +134,26 @@ char controller_handle(void) {
         break;
     case GROUP_FOUNDATION:
         switch (in) {
+        case 'Z':
+        case 'z':
+            if (selection == 0xffff) {
+
+            } else {
+                switch (selection >> 8) {
+                case GROUP_TABLEAU:
+                    if (!core_tableau_to_foundation(&game,
+                                                    (selection & 0xf0) >> 4,
+                                                    selection & 0xf,
+                                                    position)) {
+                        selection = 0xffff;
+                        render_foundation();
+                        render_tableau();
+                        move(1, 12 + (position << 2));
+                    }
+                    break;
+                }
+            }
+            break;
         case KEY_LEFT:
             if (!position) {
                 group = GROUP_TALON;
