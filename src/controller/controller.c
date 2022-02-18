@@ -94,11 +94,11 @@ char controller_handle(void) {
             position = 0;
             for (; (position & 0xf) &&
                    game.tableau[(position >> 4)]
-                                [(position & 0xf)] == 0xff;
+                               [(position & 0xf)] == 0xff;
                     --position);
             for (; (position & 0xf) < 13 &&
                    game.tableau[(position >> 4)]
-                                [(position & 0xf)] & 0x80;
+                               [(position & 0xf)] & 0x80;
                     ++position);
             move(2 + (position & 0xf), position >> 4 << 2);
             break;
@@ -120,11 +120,11 @@ char controller_handle(void) {
             position = 0x20;
             for (; (position & 0xf) &&
                    game.tableau[(position >> 4)]
-                                [(position & 0xf)] == 0xff;
+                               [(position & 0xf)] == 0xff;
                     --position);
             for (; (position & 0xf) < 13 &&
                    game.tableau[(position >> 4)]
-                                [(position & 0xf)] & 0x80;
+                               [(position & 0xf)] & 0x80;
                     ++position);
             move(2 + (position & 0xf), position >> 4 << 2);
             break;
