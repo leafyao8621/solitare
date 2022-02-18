@@ -153,7 +153,7 @@ char controller_handle(void) {
             position <<= 4;
             for (; (position & 0xf) &&
                    game.tableau[(position >> 4)]
-                                [(position & 0xf)] == 0xff;
+                               [(position & 0xf)] == 0xff;
                     --position);
             for (; (position & 0xf) < 13 &&
                    game.tableau[(position >> 4)]
