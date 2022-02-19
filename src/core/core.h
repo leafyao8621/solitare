@@ -22,6 +22,8 @@ int core_tableau_to_foundation(struct Game *game,
                                unsigned char oidx1,
                                unsigned char oidx2,
                                unsigned char didx);
+int core_talon_to_foundation(struct Game *game,
+                             unsigned char didx);
 int core_log(struct Game *game, FILE *fout);
 
 #endif

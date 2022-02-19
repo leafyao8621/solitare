@@ -15,11 +15,11 @@ static unsigned short selection;
 
 static void render_talon(void) {
     if (game.talon_ptr != game.talon) {
-        mvprintw(1, 8, "%c%2s",
+        mvprintw(1, 8, "%c%2s ",
                  suite_lookup[(game.talon_ptr[-1] >> 4)],
                  rank_lookup[(game.talon_ptr[-1] & 0xf)]);
     } else {
-        mvaddstr(1, 8, "---");
+        mvaddstr(1, 8, "--- ");
     }
 }
 
@@ -77,6 +77,37 @@ char controller_handle(void) {
     case 'Q':
     case 'q':
         return 1;
+    case 'X':
+    case 'x':
+        if (selection != 0xffff) {
+            switch (selection >> 8) {
+            case GROUP_TABLEAU:
+                mvaddch(2 + ((selection & 0xff) & 0xf),
+                        ((selection & 0xff) >> 4 << 2) + 3,
+                        ' ');
+                break;
+            case GROUP_TALON:
+                mvaddch(1, 11, ' ');
+                move(1, 8);
+                break;
+            }
+            selection = 0xffff;
+            switch (group) {
+            case GROUP_TABLEAU:
+                move(2 + (position & 0xf), position >> 4 << 2);
+                break;
+            case GROUP_TALON:
+                move(1, 8);
+                break;
+            case GROUP_STOCK:
+                move(1, 0);
+                break;
+            case GROUP_FOUNDATION:
+                move(1, 12 + (position << 2));
+                break;
+            }
+        }
+        break;
     }
     switch (group) {
     case GROUP_STOCK:
@@ -108,6 +139,18 @@ char controller_handle(void) {
         break;
     case GROUP_TALON:
         switch (in) {
+        case 'Z':
+        case 'z':
+            if (selection == 0xffff) {
+                if (game.talon_ptr != game.talon) {
+                    selection = (((unsigned short)group) << 8) | position;
+                    mvaddch(1, 11, '*');
+                    move(1, 8);
+                }
+            } else {
+
+            }
+            break;
         case KEY_LEFT:
             group = GROUP_STOCK;
             move(1, 0);
@@ -148,6 +191,14 @@ char controller_handle(void) {
                         selection = 0xffff;
                         render_foundation();
                         render_tableau();
+                        move(1, 12 + (position << 2));
+                    }
+                    break;
+                case GROUP_TALON:
+                    if (!core_talon_to_foundation(&game, position)) {
+                        selection = 0xffff;
+                        render_foundation();
+                        render_talon();
                         move(1, 12 + (position << 2));
                     }
                     break;
@@ -198,20 +249,8 @@ char controller_handle(void) {
                             '*');
                     move(2 + (position & 0xf), position >> 4 << 2);
                 }
-            }
-            break;
-        case 'X':
-        case 'x':
-            if (selection != 0xffff) {
-                switch (selection >> 8) {
-                case GROUP_TABLEAU:
-                    mvaddch(2 + ((selection & 0xff) & 0xf),
-                            ((selection & 0xff) >> 4 << 2) + 3,
-                            ' ');
-                    break;
-                }
-                selection = 0xffff;
-                move(2 + (position & 0xf), position >> 4 << 2);
+            } else {
+
             }
             break;
         case KEY_UP:

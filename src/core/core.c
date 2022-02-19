@@ -129,6 +129,32 @@ int core_tableau_to_foundation(struct Game *game,
     return 0;
 }
 
+int core_talon_to_foundation(struct Game *game,
+                             unsigned char didx) {
+    if (!game) {
+        return 1;
+    }
+    if (game->talon_ptr == game->talon ||
+        didx > 3) {
+        return 2;
+    }
+    if (game->foundations[didx] != 0xff) {
+        if (game->talon[-1] !=
+            game->foundations[didx] + 1) {
+            return 2;
+        }
+    } else {
+        if ((game->talon[-1] >> 4) !=
+            didx ||
+            game->talon[-1] & 0xf) {
+            return 2;
+        }
+    }
+    game->foundations[didx] = game->talon[-1];
+    *(--game->talon_ptr) = 0xff;
+    return 0;
+}
+
 int core_log(struct Game *game, FILE *fout) {
     if (!fout) {
         return 1;
