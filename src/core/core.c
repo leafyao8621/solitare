@@ -57,7 +57,7 @@ int core_initialize(struct Game *game, unsigned seed) {
     memset(game->foundations, -1, 4);
     for (unsigned char i = 0, *ii = cards + 24; i < 7; ++i) {
         for (unsigned char j = 0, *jj = game->tableau[i];
-             j < 13;
+             j < 20;
              ++j, ++jj) {
             if (j < i) {
                 *jj = 0x80 | *ii;
@@ -102,7 +102,7 @@ int core_tableau_to_foundation(struct Game *game,
         return 1;
     }
     if (oidx1 > 6 ||
-        oidx2 > 13 ||
+        oidx2 > 19 ||
         game->tableau[oidx1][oidx2] & 0x80 ||
         didx > 3) {
         return 2;
@@ -139,19 +139,129 @@ int core_talon_to_foundation(struct Game *game,
         return 2;
     }
     if (game->foundations[didx] != 0xff) {
-        if (game->talon[-1] !=
+        if (game->talon_ptr[-1] !=
             game->foundations[didx] + 1) {
             return 2;
         }
     } else {
-        if ((game->talon[-1] >> 4) !=
+        if ((game->talon_ptr[-1] >> 4) !=
             didx ||
-            game->talon[-1] & 0xf) {
+            game->talon_ptr[-1] & 0xf) {
             return 2;
         }
     }
-    game->foundations[didx] = game->talon[-1];
+    game->foundations[didx] = game->talon_ptr[-1];
     *(--game->talon_ptr) = 0xff;
+    return 0;
+}
+
+int core_talon_to_tableau(struct Game *game,
+                          unsigned char didx1,
+                          unsigned char didx2) {
+    if (!game ||
+        didx1 > 6 ||
+        didx2 > 19) {
+        return 1;
+    }
+    if (game->talon_ptr == game->talon) {
+        return 2;
+    }
+    if (game->tableau[didx1][didx2] == 0xff &&
+        (game->talon_ptr[-1] & 0xf) != 12) {
+        return 2;
+    }
+    if ((game->tableau[didx1][didx2] != 0xff) &&
+        (!((game->tableau[didx1][didx2] ^
+            game->talon_ptr[-1]) & 0x20) ||
+         ((game->tableau[didx1][didx2] & 0xf) !=
+          ((game->talon_ptr[-1] & 0xf) + 1)))) {
+        return 2;
+    }
+    if (game->tableau[didx1][didx2] != 0xff) {
+        game->tableau[didx1][didx2 + 1] = *(--game->talon_ptr);
+    } else {
+        game->tableau[didx1][didx2] = *(--game->talon_ptr);
+    }
+    *game->talon_ptr = 0xff;
+    return 0;
+}
+
+int core_tableau_to_tableau(struct Game *game,
+                            unsigned char oidx1,
+                            unsigned char oidx2,
+                            unsigned char didx1,
+                            unsigned char didx2) {
+    if (!game ||
+        oidx1 > 6 ||
+        oidx2 > 19 ||
+        didx1 > 6 ||
+        didx2 > 19) {
+        return 1;
+    }
+    if (game->tableau[oidx1][oidx2] & 0x80) {
+        return 2;
+    }
+    if (((game->tableau[didx1][didx2] != 0xff) &&
+         (!((game->tableau[didx1][didx2] ^
+             game->tableau[oidx1][oidx2]) & 0x20) ||
+          ((game->tableau[didx1][didx2] & 0xf) !=
+           ((game->tableau[oidx1][oidx2] & 0xf) + 1)))) ||
+        ((game->tableau[didx1][didx2] == 0xff) &&
+         ((game->tableau[oidx1][oidx2] & 0xf) != 12))) {
+        return 2;
+    }
+    if (game->tableau[didx1][didx2] & 0x80) {
+        for (unsigned char i = didx2, ii = oidx2;
+             i < 19 && ii < 19 &&
+             !(game->tableau[oidx1][ii] & 0x80);
+             ++i, ++ii) {
+            game->tableau[didx1][i] = game->tableau[oidx1][ii];
+            game->tableau[oidx1][ii] = 0xff;
+        }
+
+    } else {
+        for (unsigned char i = didx2 + 1, ii = oidx2;
+             i < 12 && ii < 12 &&
+             !(game->tableau[oidx1][ii] & 0x80);
+             ++i, ++ii) {
+            game->tableau[didx1][i] = game->tableau[oidx1][ii];
+            game->tableau[oidx1][ii] = 0xff;
+        }
+    }
+    if (oidx2) {
+        if (game->tableau[oidx1][oidx2 - 1] & 0x80) {
+            game->tableau[oidx1][oidx2 - 1] &= 0x7f;
+        }
+    }
+    return 0;
+}
+
+int core_foundation_to_tableau(struct Game *game,
+                               unsigned char oidx,
+                               unsigned char didx1,
+                               unsigned char didx2) {
+    if (!game ||
+        oidx > 3 ||
+        didx1 > 6 ||
+        didx2 > 19) {
+        return 1;
+    }
+    if (game->tableau[didx1][didx2] & 0x80 ||
+        game->foundations[oidx] == 0xff) {
+        return 2;
+    }
+    if (!((game->tableau[didx1][didx2] ^
+           game->foundations[oidx]) & 0x20) ||
+        ((game->tableau[didx1][didx2] & 0xf) !=
+         ((game->foundations[oidx] & 0xf) + 1))) {
+        return 2;
+    }
+    game->tableau[didx1][didx2 + 1] = game->foundations[oidx];
+    if (!(game->foundations[oidx] & 0xf)) {
+        game->foundations[oidx] = 0xff;
+    } else {
+        --game->foundations[oidx];
+    }
     return 0;
 }
 

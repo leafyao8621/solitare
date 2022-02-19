@@ -13,7 +13,7 @@ struct Game {
     unsigned char stock[24], *stock_ptr,
                   talon[24], *talon_ptr,
                   foundations[4],
-                  tableau[7][13];
+                  tableau[7][20];
 };
 
 int core_initialize(struct Game *game, unsigned seed);
@@ -24,6 +24,14 @@ int core_tableau_to_foundation(struct Game *game,
                                unsigned char didx);
 int core_talon_to_foundation(struct Game *game,
                              unsigned char didx);
+int core_talon_to_tableau(struct Game *game,
+                          unsigned char didx1,
+                          unsigned char didx2);
+int core_tableau_to_tableau(struct Game *game,
+                            unsigned char oidx1,
+                            unsigned char oidx2,
+                            unsigned char didx1,
+                            unsigned char didx2);
 int core_log(struct Game *game, FILE *fout);
 
 #endif

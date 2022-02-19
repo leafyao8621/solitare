@@ -38,7 +38,7 @@ static void render_foundation(void) {
 static void render_tableau(void) {
     for (unsigned char i = 0; i < 7; ++i) {
         for (unsigned char j = 0, *jj = game.tableau[i];
-             j < 13;
+             j < 19;
              ++j, ++jj) {
             if (*jj != 0xff) {
                 if (*jj & 0x80) {
@@ -129,10 +129,13 @@ char controller_handle(void) {
                    game.tableau[(position >> 4)]
                                [(position & 0xf)] == 0xff;
                     --position);
-            for (; (position & 0xf) < 13 &&
-                   game.tableau[(position >> 4)]
-                               [(position & 0xf)] & 0x80;
+            if (game.tableau[(position >> 4)]
+                            [(position & 0xf)] != 0xff) {
+                for (; (position & 0xf) < 13 &&
+                        game.tableau[(position >> 4)]
+                                    [(position & 0xf)] & 0x80;
                     ++position);
+            }
             move(2 + (position & 0xf), position >> 4 << 2);
             break;
         }
@@ -167,10 +170,13 @@ char controller_handle(void) {
                    game.tableau[(position >> 4)]
                                [(position & 0xf)] == 0xff;
                     --position);
-            for (; (position & 0xf) < 13 &&
-                   game.tableau[(position >> 4)]
-                               [(position & 0xf)] & 0x80;
+            if (game.tableau[(position >> 4)]
+                            [(position & 0xf)] != 0xff) {
+                for (; (position & 0xf) < 13 &&
+                        game.tableau[(position >> 4)]
+                                    [(position & 0xf)] & 0x80;
                     ++position);
+            }
             move(2 + (position & 0xf), position >> 4 << 2);
             break;
         }
@@ -228,10 +234,13 @@ char controller_handle(void) {
                    game.tableau[(position >> 4)]
                                [(position & 0xf)] == 0xff;
                     --position);
-            for (; (position & 0xf) < 13 &&
-                   game.tableau[(position >> 4)]
-                               [(position & 0xf)] & 0x80;
+            if (game.tableau[(position >> 4)]
+                            [(position & 0xf)] != 0xff) {
+                for (; (position & 0xf) < 13 &&
+                        game.tableau[(position >> 4)]
+                                    [(position & 0xf)] & 0x80;
                     ++position);
+            }
             move(2 + (position & 0xf), position >> 4 << 2);
             break;
         }
@@ -250,7 +259,28 @@ char controller_handle(void) {
                     move(2 + (position & 0xf), position >> 4 << 2);
                 }
             } else {
-
+                switch (selection >> 8) {
+                case GROUP_TALON:
+                    if (!core_talon_to_tableau(&game,
+                                               position >> 4,
+                                               position & 0xf)) {
+                        selection = 0xffff;
+                        render_tableau();
+                        render_talon();
+                        move(2 + (position & 0xf), position >> 4 << 2);
+                    }
+                    break;
+                case GROUP_TABLEAU:
+                    if (!core_tableau_to_tableau(&game,
+                                                 (selection & 0xf0) >> 4,
+                                                 selection & 0xf,
+                                                 position >> 4,
+                                                 position & 0xf)) {
+                        selection = 0xffff;
+                        render_tableau();
+                        move(2 + (position & 0xf), position >> 4 << 2);
+                    }
+                }
             }
             break;
         case KEY_UP:
@@ -281,10 +311,13 @@ char controller_handle(void) {
                        game.tableau[(position >> 4)]
                                    [(position & 0xf)] == 0xff;
                      --position);
-                for (; (position & 0xf) < 13 &&
-                       game.tableau[(position >> 4)]
-                                   [(position & 0xf)] & 0x80;
+                if (game.tableau[(position >> 4)]
+                                [(position & 0xf)] != 0xff) {
+                    for (; (position & 0xf) < 13 &&
+                         game.tableau[(position >> 4)]
+                                     [(position & 0xf)] & 0x80;
                      ++position);
+                }
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
             break;
@@ -295,10 +328,13 @@ char controller_handle(void) {
                        game.tableau[(position >> 4)]
                                    [(position & 0xf)] == 0xff;
                      --position);
-                for (; (position & 0xf) < 13 &&
-                       game.tableau[(position >> 4)]
-                                   [(position & 0xf)] & 0x80;
+                if (game.tableau[(position >> 4)]
+                                [(position & 0xf)] != 0xff) {
+                    for (; (position & 0xf) < 13 &&
+                         game.tableau[(position >> 4)]
+                                     [(position & 0xf)] & 0x80;
                      ++position);
+                }
                 move(2 + (position & 0xf), position >> 4 << 2);
             }
             break;
