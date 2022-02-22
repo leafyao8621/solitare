@@ -59,7 +59,7 @@ void controller_initialize(void) {
     initscr();
     keypad(stdscr, TRUE);
     noecho();
-    core_initialize(&game, 1000);
+    core_initialize(&game, time(0));
     mvaddstr(0, 0, "Solitare");
     mvaddstr(1, 0, "Stock");
     render_talon();
